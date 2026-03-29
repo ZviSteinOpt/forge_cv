@@ -297,6 +297,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
+name = "forge_cv"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "image",
+ "pollster",
+ "wgpu",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1268,16 +1278,6 @@ dependencies = [
  "log",
  "thiserror 2.0.18",
  "web-sys",
-]
-
-[[package]]
-name = "wgsl_backend"
-version = "0.1.0"
-dependencies = [
- "bytemuck",
- "image",
- "pollster",
- "wgpu",
 ]
 
 [[package]]

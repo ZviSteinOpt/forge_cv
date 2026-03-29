@@ -164,6 +164,108 @@ impl Mat {
         }
     }
 
+    // -- Conversions ----------------------------------------------------------
+
+    /// Convert RGB → grayscale (1 channel). Weights: 0.299R + 0.587G + 0.114B.
+    /// Returns a new Mat with the same scalar type but 1 channel.
+    pub fn cvt_color_gray(&self) -> Mat {
+        assert_eq!(self.channels, 3, "cvt_color_gray requires 3-channel input");
+        let n = self.rows * self.cols;
+        match self.scalar_type {
+            ScalarType::Uint8 => {
+                let mut out = vec![0u8; n];
+                for i in 0..n {
+                    let r = self.data[i * 3] as f32;
+                    let g = self.data[i * 3 + 1] as f32;
+                    let b = self.data[i * 3 + 2] as f32;
+                    out[i] = (0.299 * r + 0.587 * g + 0.114 * b).round() as u8;
+                }
+                let mut m = Mat {
+                    data: out,
+                    data_ptr: 0, data_len: 0,
+                    rows: self.rows, cols: self.cols,
+                    channels: 1,
+                    scalar_type: ScalarType::Uint8,
+                    name: self.name.clone(),
+                };
+                m.sync(); m
+            }
+            ScalarType::Float32 => {
+                let src: &[f32] = bytemuck::cast_slice(&self.data);
+                let mut out = vec![0.0f32; n];
+                for i in 0..n {
+                    out[i] = 0.299 * src[i * 3] + 0.587 * src[i * 3 + 1] + 0.114 * src[i * 3 + 2];
+                }
+                let mut m = Mat {
+                    data: bytemuck::cast_slice(&out).to_vec(),
+                    data_ptr: 0, data_len: 0,
+                    rows: self.rows, cols: self.cols,
+                    channels: 1,
+                    scalar_type: ScalarType::Float32,
+                    name: self.name.clone(),
+                };
+                m.sync(); m
+            }
+            _ => panic!("cvt_color_gray: unsupported type {:?}", self.scalar_type),
+        }
+    }
+
+    /// Convert scalar type, with optional scale: dst = src * scale.
+    /// E.g. Uint8 → Float32 with scale=1.0/255.0 to normalize to [0,1].
+    pub fn convert_to(&self, dst_type: ScalarType, scale: f64) -> Mat {
+        let n = self.rows * self.cols * self.channels;
+        let mut out_data = vec![0u8; n * dst_type.size()];
+
+        // Read each element as f64
+        for i in 0..n {
+            let val = match self.scalar_type {
+                ScalarType::Uint8 => self.data[i] as f64,
+                ScalarType::Int32 => {
+                    let s: &[i32] = bytemuck::cast_slice(&self.data);
+                    s[i] as f64
+                }
+                ScalarType::Float32 => {
+                    let s: &[f32] = bytemuck::cast_slice(&self.data);
+                    s[i] as f64
+                }
+                ScalarType::Float64 => {
+                    let s: &[f64] = bytemuck::cast_slice(&self.data);
+                    s[i]
+                }
+            } * scale;
+
+            // Write as dst type
+            match dst_type {
+                ScalarType::Uint8 => {
+                    out_data[i] = val.round().clamp(0.0, 255.0) as u8;
+                }
+                ScalarType::Int32 => {
+                    let dst: &mut [i32] = bytemuck::cast_slice_mut(&mut out_data);
+                    dst[i] = val.round() as i32;
+                }
+                ScalarType::Float32 => {
+                    let dst: &mut [f32] = bytemuck::cast_slice_mut(&mut out_data);
+                    dst[i] = val as f32;
+                }
+                ScalarType::Float64 => {
+                    let dst: &mut [f64] = bytemuck::cast_slice_mut(&mut out_data);
+                    dst[i] = val;
+                }
+            }
+        }
+
+        let mut m = Mat {
+            data: out_data,
+            data_ptr: 0, data_len: 0,
+            rows: self.rows, cols: self.cols,
+            channels: self.channels,
+            scalar_type: dst_type,
+            name: self.name.clone(),
+        };
+        m.sync();
+        m
+    }
+
     // -- Resize (called by gpu_matrix.download) -------------------------------
 
     pub fn resize(

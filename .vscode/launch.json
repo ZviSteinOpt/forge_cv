@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run (debug)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/gpu_matrix_tester",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "cargo build",
+            "sourceLanguages": ["rust"]
+        },
+        {
+            "name": "mat_test (debug)",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": ["test", "--no-run", "--test=mat_test", "--package=forge_cv"],
+                "filter": {
+                    "name": "mat_test",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Run (release)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/release/gpu_matrix_tester",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "cargo build release",
+            "sourceLanguages": ["rust"]
+        }
+    ]
+}

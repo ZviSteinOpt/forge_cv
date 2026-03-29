@@ -1,4 +1,4 @@
-use wgsl_backend::{Mat, ScalarType};
+use forge_cv::{Mat, ScalarType};
 
 const TEST_IMAGE: &str = "/Users/zvistein/GitHub_repos/GeneratedOutput/BullsAI/data backup/2BulletData/images/train/fa1833bb-Screenshot_20220718-093648_Maps.jpg";
 
@@ -13,13 +13,13 @@ fn imread_loads_image() {
     assert_eq!(m.bytes(), m.rows() * m.cols() * 3);
 
 
-    let mm = Mat::imread(TEST_IMAGE);
+    let mm = m.cvt_color_gray().convert_to(ScalarType::Float32, 1.0 / 255.0);
 
-    assert!(mm.rows() > 0);
-    assert!(mm.cols() > 0);
-    assert_eq!(mm.channels(), 3);
-    assert_eq!(mm.scalar_type(), ScalarType::Uint8);
-    assert_eq!(mm.bytes(), mm.rows() * mm.cols() * 3);
+    assert_eq!(mm.rows(), m.rows());
+    assert_eq!(mm.cols(), m.cols());
+    assert_eq!(mm.channels(), 1);
+    assert_eq!(mm.scalar_type(), ScalarType::Float32);
+    assert_eq!(mm.bytes(), mm.rows() * mm.cols() * 4);
 
     println!("Loaded: {}x{} x{}ch  ({} bytes)",
         m.rows(), m.cols(), m.channels(), m.bytes());
