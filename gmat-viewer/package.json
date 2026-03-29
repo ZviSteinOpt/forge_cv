@@ -1,0 +1,41 @@
+{
+  "name": "gmat-viewer",
+  "displayName": "GMAT Matrix Viewer",
+  "description": "Image Watch for Mat — visualize matrices live during debugging",
+  "version": "0.3.0",
+  "publisher": "zvistein",
+  "engines": { "vscode": "^1.86.0" },
+  "categories": ["Debuggers", "Visualization"],
+  "activationEvents": [
+    "onDebug"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gmat-viewer.viewVariable",
+        "title": "GMAT: View Matrix Variable"
+      },
+      {
+        "command": "gmat-viewer.open",
+        "title": "GMAT: Open .gmat File"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "gmat-viewer.matrixView",
+        "displayName": "Matrix Viewer",
+        "selector": [{ "filenamePattern": "*.gmat" }],
+        "priority": "default"
+      }
+    ],
+    "menus": {
+      "debug/variables/context": [
+        {
+          "command": "gmat-viewer.viewVariable",
+          "when": "debugType == lldb"
+        }
+      ]
+    }
+  }
+}
